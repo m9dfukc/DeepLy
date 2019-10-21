@@ -1,8 +1,33 @@
 # DeepLy
 
-[![Build Status](https://img.shields.io/travis/chriskonnertz/DeepLy.svg)](https://travis-ci.org/chriskonnertz/DeepLy)
-[![Version](https://img.shields.io/packagist/v/chriskonnertz/DeepLy.svg)](https://packagist.org/packages/chriskonnertz/deeply)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/chriskonnertz/deeply/master/LICENSE)
+Forked Version from https://github.com/chriskonnertz/DeepLy
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 [DeepL.com](https://www.deepl.com/) is a great, new translation service. 
 It provides better translations compared to other popular translation engines.
@@ -16,7 +41,7 @@ DeepLy is a PHP package that implements a client to interact with DeepL via thei
 Through [Composer](https://getcomposer.org/):
 
 ```
-composer require chriskonnertz/deeply
+composer require starcitizenwiki/deeply
 ```
 
 From then on you may run `composer update` to get the latest version of this library.
@@ -26,10 +51,12 @@ It is possible to use this library without using Composer but then it is necessa
 
 > This library requires PHP 5.6 or higher and the cURL extension.
 
+If you do not have an API key, now is the time to get one. Vist [DeepL-com](https://deepl.com/) to request an API key.
+
 ## Usage Example
 
 ```php
-$deepLy = new ChrisKonnertz\DeepLy\DeepLy();
+$deepLy = new StarCitizenWiki\DeepLy\DeepLy('Your-API-Key');
 
 $translatedText = $deepLy->translate('Hello world!', 'DE', 'EN');
     
@@ -41,9 +68,10 @@ echo $translatedText; // Prints "Hallo Welt!"
 ### Sophisticated Example
 
 ```php
-use ChrisKonnertz\DeepLy\DeepLy;
+use StarCitizenWiki\DeepLy\DeepLy;
 
-$deepLy = new DeepLy();
+$apiKey = 'Your-API-Key';
+$deepLy = new DeepLy($apiKey);
 
 try {
     $translatedText = $deepLy->translate('Hello world!', DeepLy::LANG_EN, DeepLy::LANG_AUTO);
@@ -127,7 +155,7 @@ Make sure you have installed Guzzle (preferably via Composer), then copy this co
 
 ```php
 $protocol = $deepLy->getProtocol();
-$httpClient = new \ChrisKonnertz\DeepLy\HttpClient\GuzzleHttpClient($protocol);
+$httpClient = new \StarCitizenWiki\DeepLy\HttpClient\GuzzleHttpClient($protocol);
 $deepLy->setHttpClient($httpClient);
 ```
 
@@ -138,25 +166,25 @@ DeepLy comes with support for Laravel 5.x and since it also supports
 it will be auto-detected in Laravel 5.5. 
 
 In Laravel 5.0-5.4 you manually have to register the service provider
- `ChrisKonnertz\DeepLy\Integrations\Laravel\DeepLyServiceProvider` in the "providers" array and the facade 
- `ChrisKonnertz\DeepLy\Integrations\Laravel\DeepLyFacade` as an alias in the "aliases" array 
+ `StarCitizenWiki\DeepLy\Integrations\Laravel\DeepLyServiceProvider` in the "providers" array and the facade 
+ `StarCitizenWiki\DeepLy\Integrations\Laravel\DeepLyFacade` as an alias in the "aliases" array 
  in your `config/app.php` config file.
- 
- You can then access DeepLy like this: `$ping = \DeepLy::ping();`
+
+DeepLy uses `env('DEEPL_API_KEY')` to retrieve the API key so you have to set it in the environment settings.
+You can then access DeepLy like this: `$ping = \DeepLy::ping();`
  
 ## Demos
 
 There are several demo scripts included in the `demos` folder:
 
-* `demo_translate.php`: Demonstrates language translation. Write a text and the API will try to translate it to a language of your choice.
 * `demo_detect.php`: Demonstrates language detection. Write a text and the API will tell you which language it thinks it is.
+* `demo_translate.php`: Demonstrates language translation. Write a text and the API will try to translate it to a language of your choice.
 * `demo_split.php`: Demonstrates sentence detection. Write a text and the API will split it into sentences.
 * `demo_ping.php`: Demonstrates DeepLy's `ping()` method by pinging the API.
 
 ## Request Limit
 
-There is a request limit. The threshold of this limit is unknown.
-
+There is a request limit. The threshold of this limit is specified in the quota documentation delivered to you by DeepL.
 
 ## Internals
 
@@ -175,7 +203,7 @@ There are also some exception classes, interfaces, an alternative HTTP client im
 DeepL.com has officially released their API. They offer a premium service that includes access to this API. 
 However, it is still possible (at your own risk) to access the API without using the premium service.
 
-Premium API access requires authentication with an API key. This will be supported by Deeply 2. 
+Premium API access requires authentication with an API key.
 
 ## Disclaimer
 
@@ -191,6 +219,8 @@ Give these implementations a try if you are coding in Node.js or Python.
 ## Notes
 
 * Texts have to be UTF8-encoded.
+
+* Take a look at the official API documentation for more information: https://www.deepl.com/docs/api-reference.html
 
 * If you are looking for a real-world example application that uses DeepLy, you may take a look at [Translation Factory](https://github.com/chriskonnertz/translation-factory).
 

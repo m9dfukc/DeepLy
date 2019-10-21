@@ -1,6 +1,10 @@
 <?php
 
-namespace ChrisKonnertz\DeepLy\ResponseBag;
+declare(strict_types=1);
+
+namespace Octfx\DeepLy\ResponseBag;
+
+use stdClass;
 
 /**
  * This class is the abstract class for all bag classes.
@@ -10,21 +14,21 @@ namespace ChrisKonnertz\DeepLy\ResponseBag;
  */
 abstract class AbstractBag
 {
-
     /**
-     * The response content (payload) object of a split text API call
+     * The response content (payload) object of a split text API call.
      *
-     * @var \stdClass
+     * @var stdClass
      */
     protected $responseContent;
 
     /**
      * SentencesBag constructor.
      *
-     * @param \stdClass $responseContent The response content (payload) of a split text API call
+     * @param stdClass $responseContent The response content (payload) of a split text API call
+     *
      * @throws BagException
      */
-    public function __construct(\stdClass $responseContent)
+    public function __construct(stdClass $responseContent)
     {
         $this->verifyResponseContent($responseContent);
 
@@ -37,34 +41,36 @@ abstract class AbstractBag
      * This method will not return true/false but throw an exception if something is invalid.
      *
      * @param mixed|null $responseContent The response content (payload) of a split text API call
+     *
      * @throws BagException
+     *
      * @return void
      */
-    public function verifyResponseContent($responseContent)
+    public function verifyResponseContent($responseContent): void
     {
-        if (! $responseContent instanceof \stdClass) {
+        if (!$responseContent instanceof stdClass) {
             throw new BagException('DeepLy API call did not return JSON that describes a \stdClass object', 10);
         }
 
-        if (property_exists($responseContent, 'error')) {
-            if ($responseContent->error instanceof \stdClass and property_exists($responseContent->error, 'message')) {
-                throw new BagException(
-                    'DeepLy API call resulted in this error: '.$responseContent->error->message, 20
-                );
-            } else {
-                throw new BagException('DeepLy API call resulted in an unknown error', 21);
-            }
+        if (property_exists($responseContent, 'message')) {
+            throw new BagException(
+                sprintf(
+                    '%s: %s',
+                    'DeepLy API call resulted in error: ',
+                    $responseContent->error->message
+                ),
+                20
+            );
         }
     }
 
     /**
-     * Getter for the response content (payload) object of a split text API call
+     * Getter for the response content (payload) object of a split text API call.
      *
-     * @return \stdClass
+     * @return stdClass
      */
-    public function getResponseContent()
+    public function getResponseContent(): stdClass
     {
         return $this->responseContent;
     }
-
 }
