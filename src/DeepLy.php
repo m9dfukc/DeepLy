@@ -37,6 +37,8 @@ class DeepLy
     public const LANG_IT = 'IT'; // Italian
     public const LANG_NL = 'NL'; // Dutch
     public const LANG_PL = 'PL'; // Polish
+    public const LANG_PT = 'PT'; // Portuguese
+    public const LANG_RU = 'RU'; // Russian
 
     /**
      * Array with all supported language codes.
@@ -52,6 +54,8 @@ class DeepLy
         self::LANG_IT,
         self::LANG_NL,
         self::LANG_PL,
+        self::LANG_PT,
+        self::LANG_RU,
     ];
 
     /**
@@ -68,6 +72,8 @@ class DeepLy
         self::LANG_IT => 'Italian',
         self::LANG_NL => 'Dutch',
         self::LANG_PL => 'Polish',
+        self::LANG_PT => 'Portuguese',
+        self::LANG_RU => 'Russian',
     ];
 
     /**
@@ -117,8 +123,25 @@ class DeepLy
      */
     protected $translationBag;
 
-    private $splitSentences = true;
-    private $preserveFormatting = false;
+    /**
+     * @see DeepLy::splitSentences()
+     *
+     * @var string
+     */
+    private $splitSentences = '1';
+
+    /**
+     * @see DeepLy::preserveFormatting()
+     *
+     * @var string
+     */
+    private $preserveFormatting = '0';
+
+    /**
+     * @see DeepLy::setValidateTextLength()
+     *
+     * @var bool false to ignore 30kb limit
+     */
     private $checkTextLength = true;
 
     /**
@@ -199,6 +222,7 @@ class DeepLy
      * @throws QuotaException
      * @throws RateLimitedException
      * @throws TextLengthException
+     * @throws CallException
      */
     public function translate(string $text, string $to = self::LANG_EN, string $from = self::LANG_AUTO): ?string
     {
@@ -221,6 +245,7 @@ class DeepLy
      * @throws QuotaException
      * @throws RateLimitedException
      * @throws TextLengthException
+     * @throws CallException
      */
     public function translateFile(string $filename, string $to = self::LANG_EN, string $from = self::LANG_AUTO): ?string
     {
@@ -309,8 +334,10 @@ class DeepLy
     }
 
     /**
-     * Whether to split sentences or not.
-     * Default: TRUE.
+     * Sets whether the translation engine should first split the input into sentences. This is enabled by default.
+     * - "0" - no splitting at all, whole input is treated as one sentence
+     * - "1" (default) - splits on interpunction and on newlines
+     * - "nonewlines" - splits on interpunction only, ignoring newlines.
      *
      * @param bool $flag
      *
@@ -324,14 +351,15 @@ class DeepLy
     }
 
     /**
-     * Whether to preserve the formatting or not.
-     * Default: FALSE.
+     * Sets whether the translation engine should respect the original formatting, even if it would usually correct some aspects.
+     * - "0" (default)
+     * - "1".
      *
-     * @param bool $flag
+     * @param string $flag
      *
-     * @return $this
+     * @return DeepLy
      */
-    public function preserveFormatting(bool $flag = false): DeepLy
+    public function preserveFormatting(string $flag = '0'): DeepLy
     {
         $this->preserveFormatting = $flag;
 
@@ -346,7 +374,7 @@ class DeepLy
      *
      * @return DeepLy
      */
-    public function ignoreTextLength(bool $flag = false): DeepLy
+    public function setValidateTextLength(bool $flag = false): DeepLy
     {
         $this->checkTextLength = $flag;
 
@@ -369,6 +397,7 @@ class DeepLy
      * @throws QuotaException
      * @throws RateLimitedException
      * @throws TextLengthException
+     * @throws CallException
      */
     protected function requestTranslation(string $text, string $to = self::LANG_EN, string $from = self::LANG_AUTO): TranslationBag
     {
