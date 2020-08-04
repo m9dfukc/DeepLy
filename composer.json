@@ -26,7 +26,7 @@
   "require": {
     "ext-mbstring": "*",
     "php": ">=7.1",
-    "guzzlehttp/guzzle": "^6.3"
+    "guzzlehttp/guzzle": "^6.3||^7.0"
   },
   "require-dev": {
     "phpunit/phpunit": "5.7"
@@ -45,6 +45,5 @@
         "DeepLy": "Octfx\\DeepLy\\Integrations\\Laravel\\DeepLyFacade"
       }
     }
-  },
-  "minimum-stability": "dev"
+  }
 }
