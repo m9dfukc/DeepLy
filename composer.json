@@ -1,6 +1,6 @@
 {
   "name": "octfx/deeply",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "DeepLy is a PHP client for the DeepL.com translation API",
   "keywords": [
     "deepl",
