@@ -145,6 +145,13 @@ class DeepLy
     private $checkTextLength = true;
 
     /**
+     * @see DeepLy::formality()
+     *
+     * @var string The translation formality
+     */
+    private $formality = 'default';
+
+    /**
      * DeepLy object constructor.
      *
      * @param string $apiKey The API key for the DeepL API
@@ -215,6 +222,7 @@ class DeepLy
      * @param string      $text The text you want to translate
      * @param string      $to   Optional: The target language, a self::LANG_<code> constant
      * @param string|null $from Optional: The source language, a self::LANG_<code> constant
+     * @param string      $formality Optional: The target formality
      *
      * @return string|null Returns the translated text or null if there is no translation
      *
@@ -222,10 +230,11 @@ class DeepLy
      * @throws QuotaException
      * @throws RateLimitedException
      * @throws TextLengthException
-     * @throws CallException
      */
-    public function translate(string $text, string $to = self::LANG_EN, string $from = self::LANG_AUTO): ?string
+    public function translate(string $text, string $to = self::LANG_EN, string $from = self::LANG_AUTO, string $formality = 'default'): ?string
     {
+        $this->formality($formality);
+
         return $this->requestTranslation($text, $to, $from)->getTranslation();
     }
 
@@ -235,9 +244,10 @@ class DeepLy
      * This method will throw an exception if reading the file or translating fails
      * so you should wrap it in a try-catch-block.
      *
-     * @param string      $filename The name of the file you want to translate
-     * @param string      $to       Optional: The target language, a self::LANG_<code> constant
-     * @param string|null $from     Optional: The source language, a self::LANG_<code> constant
+     * @param string      $filename  The name of the file you want to translate
+     * @param string      $to        Optional: The target language, a self::LANG_<code> constant
+     * @param string|null $from      Optional: The source language, a self::LANG_<code> constant
+     * @param string      $formality Optional: The target formality
      *
      * @return string|null Returns the translated text or null if there is no translation
      *
@@ -245,9 +255,8 @@ class DeepLy
      * @throws QuotaException
      * @throws RateLimitedException
      * @throws TextLengthException
-     * @throws CallException
      */
-    public function translateFile(string $filename, string $to = self::LANG_EN, string $from = self::LANG_AUTO): ?string
+    public function translateFile(string $filename, string $to = self::LANG_EN, string $from = self::LANG_AUTO, string $formality = 'default'): ?string
     {
         if (!is_readable($filename)) {
             throw new InvalidArgumentException('Could not read file with the given filename');
@@ -261,7 +270,7 @@ class DeepLy
             );
         }
 
-        return $this->translate($text, $to, $from);
+        return $this->translate($text, $to, $from, $formality);
     }
 
     /**
@@ -367,6 +376,25 @@ class DeepLy
     }
 
     /**
+     * Sets whether the translated text should lean towards formal or informal language. This feature currently works
+     * for all target languages except "ES" (Spanish), "JA" (Japanese) and "ZH" (Chinese). Possible options are:
+     * "default" (default)
+     * "more" - for a more formal language
+     * "less" - for a more informal language
+     * @see https://www.deepl.com/docs-api/translating-text/    Request Parameters -> formality
+     *
+     * @param string $formality
+     *
+     * @return DeepLy
+     */
+    public function formality(string $formality): DeepLy
+    {
+        $this->formality = strtolower($formality);
+
+        return $this;
+    }
+
+    /**
      * True to ignore 30kb Limit
      * Default: FALSE.
      *
@@ -443,6 +471,7 @@ class DeepLy
             'auth_key' => $this->apiKey,
             'split_sentences' => $this->splitSentences,
             'preserve_formatting' => $this->preserveFormatting,
+            'formality' => $this->formality,
         ];
     }
 
