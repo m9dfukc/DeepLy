@@ -68,6 +68,20 @@ better use the language code constants of the `DeepLy` class. The class also off
 You may use the `proposeTranslations` method if you want to get alternative translations for a text. 
 This method cannot operate on more than one sentence at once. 
 
+## Translation formality
+The DeepL API allows to specify the formality of the translated text.  
+This feature currently works for all target languages except "ES" (Spanish), "JA" (Japanese) and "ZH" (Chinese).  
+Possible options are:
+- "default" (default)
+- "more" - for a more formal language
+- "less" - for a more informal language
+```php
+$deepLy->formality('less');
+
+// or
+$translatedText = $deepLy->translate('Hello world!', DeepLy::LANG_EN, DeepLy::LANG_AUTO, 'more');
+```
+
 ## Auto-Detect Language
 
 DeepLy has a method that uses the DeepL API to detect the language of a text:
