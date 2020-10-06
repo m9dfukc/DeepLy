@@ -19,11 +19,11 @@ class JsonProtocol implements ProtocolInterface
      *
      * @param string $rawResponseData The data (payload) of the response as a stringified JSON string
      *
-     * @return stdClass The data (payload) of the response as an object structure
+     * @return stdClass|array The data (payload) of the response as an object structure
      *
      * @throws ProtocolException|InvalidArgumentException
      */
-    public function processResponseData(string $rawResponseData): stdClass
+    public function processResponseData(string $rawResponseData)
     {
         return json_decode($rawResponseData);
     }

@@ -24,11 +24,11 @@ abstract class AbstractBag
     /**
      * SentencesBag constructor.
      *
-     * @param stdClass $responseContent The response content (payload) of a split text API call
+     * @param stdClass|array $responseContent The response content (payload) of a split text API call
      *
      * @throws BagException
      */
-    public function __construct(stdClass $responseContent)
+    public function __construct($responseContent)
     {
         $this->verifyResponseContent($responseContent);
 
@@ -67,9 +67,9 @@ abstract class AbstractBag
     /**
      * Getter for the response content (payload) object of a split text API call.
      *
-     * @return stdClass
+     * @return stdClass|array
      */
-    public function getResponseContent(): stdClass
+    public function getResponseContent()
     {
         return $this->responseContent;
     }
