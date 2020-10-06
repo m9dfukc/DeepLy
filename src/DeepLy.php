@@ -15,6 +15,7 @@ use Octfx\DeepLy\HttpClient\GuzzleHttpClient;
 use Octfx\DeepLy\HttpClient\HttpClientInterface;
 use Octfx\DeepLy\Protocol\JsonProtocol;
 use Octfx\DeepLy\Protocol\ProtocolInterface;
+use Octfx\DeepLy\ResponseBag\SupportedLanguagesBag;
 use Octfx\DeepLy\ResponseBag\TranslationBag;
 use Octfx\DeepLy\ResponseBag\UsageBag;
 use RuntimeException;
@@ -31,31 +32,58 @@ class DeepLy
      */
     public const LANG_AUTO = 'auto'; // Let DeepL decide which language it is (only works for the source language)
     public const LANG_DE = 'DE'; // German
-    public const LANG_EN = 'EN'; // English
+    public const LANG_EN = 'EN'; // English | DEPRECATED as TARGET language, use EN-GB or EN-US instead
+    public const LANG_EN_GB = 'EN-GB'; // English (British)
+    public const LANG_EN_US = 'EN-US'; // English (American)
     public const LANG_FR = 'FR'; // French
-    public const LANG_ES = 'ES'; // Spanish
     public const LANG_IT = 'IT'; // Italian
+    public const LANG_JA = 'JA'; // Japanese
+    public const LANG_ES = 'ES'; // Spanish
     public const LANG_NL = 'NL'; // Dutch
     public const LANG_PL = 'PL'; // Polish
-    public const LANG_PT = 'PT'; // Portuguese
+    public const LANG_PT = 'PT'; // Portuguese | DEPRECATED as TARGET language, use PT-PT or PT-BR instead
+    public const LANG_PT_PT = 'PT'; // Portuguese (all Portuguese varieties excluding Brazilian Portuguese)
+    public const LANG_PT_BR = 'PT'; // Portuguese (Brazilian)
     public const LANG_RU = 'RU'; // Russian
+    public const LANG_ZH = 'ZH'; // Chinese
 
     /**
-     * Array with all supported language codes.
-     *
-     * @see https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+     * Language codes supported as the source language
      */
-    public const LANG_CODES = [
+    public const SOURCE_LANG_CODES = [
         self::LANG_AUTO,
         self::LANG_DE,
         self::LANG_EN,
         self::LANG_FR,
-        self::LANG_ES,
         self::LANG_IT,
+        self::LANG_JA,
+        self::LANG_ES,
         self::LANG_NL,
         self::LANG_PL,
         self::LANG_PT,
         self::LANG_RU,
+        self::LANG_ZH,
+    ];
+
+    /**
+     * Language codes supported as the target language
+     */
+    public const TARGET_LANG_CODES = [
+        self::LANG_DE,
+        self::LANG_EN_GB,
+        self::LANG_EN_US,
+        self::LANG_EN, // DEPRECATED
+        self::LANG_FR,
+        self::LANG_IT,
+        self::LANG_JA,
+        self::LANG_ES,
+        self::LANG_NL,
+        self::LANG_PL,
+        self::LANG_PT, // DEPRECATED
+        self::LANG_PT_PT,
+        self::LANG_PT_BR,
+        self::LANG_RU,
+        self::LANG_ZH,
     ];
 
     /**
@@ -67,13 +95,19 @@ class DeepLy
         self::LANG_AUTO => 'Auto',
         self::LANG_DE => 'German',
         self::LANG_EN => 'English',
-        self::LANG_FR => 'French',
+        self::LANG_EN_GB => 'English (British)',
+        self::LANG_EN_US => 'English (American)',
         self::LANG_ES => 'Spanish',
+        self::LANG_FR => 'French',
         self::LANG_IT => 'Italian',
+        self::LANG_JA => 'Japanese',
         self::LANG_NL => 'Dutch',
         self::LANG_PL => 'Polish',
         self::LANG_PT => 'Portuguese',
+        self::LANG_PT_PT => 'Portuguese (European)',
+        self::LANG_PT_BR => 'Portuguese (Brazilian)',
         self::LANG_RU => 'Russian',
+        self::LANG_ZH => 'Chinese',
     ];
 
     /**
@@ -95,7 +129,7 @@ class DeepLy
     /**
      * Current version number.
      */
-    public const VERSION = '3.0';
+    public const VERSION = '3.0.3';
 
     /**
      * @var ProtocolInterface
@@ -156,7 +190,7 @@ class DeepLy
      *
      * @param string $apiKey The API key for the DeepL API
      */
-    public function __construct($apiKey)
+    public function __construct(string $apiKey)
     {
         $this->apiKey = $apiKey;
 
@@ -215,24 +249,55 @@ class DeepLy
     }
 
     /**
+     * Get the current Usage.
+     *
+     * @param string $type Sets whether source or target languages should be listed. Possible options are:
+     *                     "source" (default) - For languages that can be used in the source_lang parameter of
+     *                     /translate requests.
+     *                     "target" - For languages that can be used in the target_lang parameter of /translate
+     *                     requests.
+     *
+     * @return SupportedLanguagesBag
+     */
+    public function getSupportedLanguages(string $type = 'source'): SupportedLanguagesBag
+    {
+        $rawResponseData = $this->httpClient->callApi(
+            'languages ',
+            'GET',
+            [
+                'auth_key' => $this->apiKey,
+                'type' => $type,
+            ]
+        );
+
+        $responseContent = $this->protocol->processResponseData($rawResponseData);
+
+        return new SupportedLanguagesBag($responseContent);
+    }
+
+    /**
      * Translates a text.
      * ATTENTION: The target language parameter is followed by the source language parameter!
      * This method might throw an exception so you should wrap it in a try-catch-block.
      *
-     * @param string      $text The text you want to translate
-     * @param string      $to   Optional: The target language, a self::LANG_<code> constant
-     * @param string|null $from Optional: The source language, a self::LANG_<code> constant
+     * @param string      $text      The text you want to translate
+     * @param string      $to        Optional: The target language, a self::LANG_<code> constant
+     * @param string|null $from      Optional: The source language, a self::LANG_<code> constant
      * @param string      $formality Optional: The target formality
      *
      * @return string|null Returns the translated text or null if there is no translation
      *
-     * @throws AuthenticationException
-     * @throws QuotaException
-     * @throws RateLimitedException
-     * @throws TextLengthException
+     * @throws \Octfx\DeepLy\Exceptions\AuthenticationException
+     * @throws \Octfx\DeepLy\Exceptions\QuotaException
+     * @throws \Octfx\DeepLy\Exceptions\RateLimitedException
+     * @throws \Octfx\DeepLy\Exceptions\TextLengthException
      */
-    public function translate(string $text, string $to = self::LANG_EN, string $from = self::LANG_AUTO, string $formality = 'default'): ?string
-    {
+    public function translate(
+        string $text,
+        string $to = self::LANG_EN,
+        string $from = self::LANG_AUTO,
+        string $formality = 'default'
+    ): ?string {
         $this->formality($formality);
 
         return $this->requestTranslation($text, $to, $from)->getTranslation();
@@ -256,8 +321,12 @@ class DeepLy
      * @throws RateLimitedException
      * @throws TextLengthException
      */
-    public function translateFile(string $filename, string $to = self::LANG_EN, string $from = self::LANG_AUTO, string $formality = 'default'): ?string
-    {
+    public function translateFile(
+        string $filename,
+        string $to = self::LANG_EN,
+        string $from = self::LANG_AUTO,
+        string $formality = 'default'
+    ): ?string {
         if (!is_readable($filename)) {
             throw new InvalidArgumentException('Could not read file with the given filename');
         }
@@ -274,40 +343,34 @@ class DeepLy
     }
 
     /**
-     * Decides if a language (code) is supported by DeepL(y).
+     * Decides if a language (code) is supported by DeepL(y) as the source language.
      * Note that 'auto' is not a valid value in this context
-     * except you explicitly set the $allowAuto param to true.
      *
-     * @param string $langCode  The language code, for example 'EN'
-     * @param bool   $allowAuto Optional: If false, 'auto' is not a valid language
+     * @param string $langCode The language code, for example 'EN'
      *
      * @return bool
      */
-    public function supportsLangCode(string $langCode, bool $allowAuto = false): bool
+    public function supportsSourceLangCode(string $langCode): bool
     {
-        return in_array($langCode, $this->getLangCodes($allowAuto), true);
+        return in_array($langCode, self::SOURCE_LANG_CODES, true);
     }
 
     /**
-     * Getter for the array with all supported language codes.
+     * Decides if a language (code) is supported by DeepL(y) as the target language.
+     * Note that 'auto' is not a valid value in this context
      *
-     * @param bool $withAuto Optional: If true, the 'auto' code will be in the returned array
+     * @param string $langCode The language code, for example 'EN'
      *
-     * @return string[]
+     * @return bool
      */
-    public function getLangCodes(bool $withAuto = true): array
+    public function supportsTargetLangCode(string $langCode): bool
     {
-        if ($withAuto) {
-            return self::LANG_CODES;
-        }
-
-        // ATTENTION! This only works as long as self::LANG_AUTO is the first item!
-        return array_slice(self::LANG_CODES, 1);
+        return in_array($langCode, self::TARGET_LANG_CODES, true);
     }
 
     /**
      * Returns the English name of a language for a given language code.
-     * The language code must be on of these: self::LANG_CODES.
+     * The language code must be on of these: self::SOURCE_LANG_CODES or self::TARGET_LANG_CODES.
      *
      * @param string $langCode The code of the language
      *
@@ -315,7 +378,7 @@ class DeepLy
      */
     public function getLangName(string $langCode): string
     {
-        return self::LANG_NAMES[$langCode];
+        return self::LANG_NAMES[$langCode] ?? 'UNKNOWN LANGUAGE CODE';
     }
 
     /**
@@ -348,11 +411,11 @@ class DeepLy
      * - "1" (default) - splits on interpunction and on newlines
      * - "nonewlines" - splits on interpunction only, ignoring newlines.
      *
-     * @param bool $flag
+     * @param string $flag
      *
      * @return $this
      */
-    public function splitSentences(bool $flag = true): DeepLy
+    public function splitSentences($flag = '1'): DeepLy
     {
         $this->splitSentences = $flag;
 
@@ -360,7 +423,8 @@ class DeepLy
     }
 
     /**
-     * Sets whether the translation engine should respect the original formatting, even if it would usually correct some aspects.
+     * Sets whether the translation engine should respect the original formatting, even if it would usually correct
+     * some aspects.
      * - "0" (default)
      * - "1".
      *
@@ -416,8 +480,8 @@ class DeepLy
      * You may use the translate() method if you want to get the result as a string.
      *
      * @param string      $text the text to translate
-     * @param string      $to   Optional: The target language, a self::LANG_<code> constant
-     * @param string|null $from Optional: The source language, a self::LANG_<code> constant
+     * @param string      $to   Optional: The target language, a self::SOURCE_LANG_<code> constant
+     * @param string|null $from Optional: The source language, a self::TARGET_LANG_<code> constant
      *
      * @return TranslationBag
      *
@@ -427,21 +491,24 @@ class DeepLy
      * @throws TextLengthException
      * @throws CallException
      */
-    protected function requestTranslation(string $text, string $to = self::LANG_EN, string $from = self::LANG_AUTO): TranslationBag
-    {
+    protected function requestTranslation(
+        string $text,
+        string $to = self::LANG_EN,
+        string $from = self::LANG_AUTO
+    ): TranslationBag {
         $this->validateTextParameter($text);
         $this->validateToParameter($to);
         $this->validateFromParameter($from);
 
-        $params = $this->buildBaseParams();
-        $params = array_merge(
-            $params,
-            [
-                'text' => $text,
-                'source_lang' => $from,
-                'target_lang' => $to,
-            ]
-        );
+        $params = [
+            'auth_key' => $this->apiKey,
+            'split_sentences' => $this->splitSentences,
+            'preserve_formatting' => $this->preserveFormatting,
+            'formality' => $this->formality,
+            'text' => $text,
+            'source_lang' => $from,
+            'target_lang' => $to,
+        ];
 
         if (self::LANG_AUTO === $from) {
             unset($params['source_lang']);
@@ -458,21 +525,6 @@ class DeepLy
         $this->translationBag = new TranslationBag($responseContent);
 
         return $this->translationBag;
-    }
-
-    /**
-     * Build the base params.
-     *
-     * @return array
-     */
-    private function buildBaseParams(): array
-    {
-        return [
-            'auth_key' => $this->apiKey,
-            'split_sentences' => $this->splitSentences,
-            'preserve_formatting' => $this->preserveFormatting,
-            'formality' => $this->formality,
-        ];
     }
 
     /**
@@ -508,20 +560,21 @@ class DeepLy
      */
     private function validateToParameter(string $to): void
     {
-        if (!is_string($to)) {
-            throw new InvalidArgumentException('The $to argument has to be a string');
-        }
-
-        if (!in_array($to, self::LANG_CODES, true)) {
-            throw new InvalidArgumentException('The $to argument has to be a valid language code');
-        }
-
         if (self::LANG_AUTO === $to) {
             throw new InvalidArgumentException(
                 sprintf(
                     '%s "%s"',
                     'The $to argument cannot be',
                     self::LANG_AUTO
+                )
+            );
+        }
+
+        if (!in_array($to, self::TARGET_LANG_CODES, true)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'The $to argument has to be one of the supported target language codes. [%s]',
+                    implode(', ', self::TARGET_LANG_CODES)
                 )
             );
         }
@@ -536,12 +589,13 @@ class DeepLy
      */
     private function validateFromParameter(string $from): void
     {
-        if (!is_string($from)) {
-            throw new InvalidArgumentException('The $from argument has to be a string');
-        }
-
-        if (!in_array($from, self::LANG_CODES, true)) {
-            throw new InvalidArgumentException('The $from argument has to a valid language code');
+        if (!in_array($from, self::SOURCE_LANG_CODES, true)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'The $from argument has to be one of the supported source language codes. [%s]',
+                    implode(', ', self::SOURCE_LANG_CODES)
+                )
+            );
         }
     }
 
@@ -557,9 +611,17 @@ class DeepLy
     {
         switch ($exception->getCode()) {
             case 403:
-                throw new AuthenticationException('Authorization failed. Please supply a valid auth_key parameter.', 403, $exception);
+                throw new AuthenticationException(
+                    'Authorization failed. Please supply a valid auth_key parameter.',
+                    403,
+                    $exception
+                );
             case 429:
-                throw new RateLimitedException('Too many requests. Please wait and resend your request.', 426, $exception);
+                throw new RateLimitedException(
+                    'Too many requests. Please wait and resend your request.',
+                    426,
+                    $exception
+                );
             case 456:
                 throw new QuotaException('Quota exceeded. The character limit has been reached.', 456, $exception);
             default:

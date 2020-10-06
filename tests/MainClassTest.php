@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Class MainClassTest for tests with PHPUnit.
- * The focus is here on the main class of this library, Octfx\DeePly.
+ * The focus is here on the main class of this library, Octfx\DeepLy.
  */
 class MainClassTest extends TestCase
 {
@@ -20,35 +20,6 @@ class MainClassTest extends TestCase
         $this->assertNull($translationBag);
     }
 
-    /**
-     * @covers \Octfx\DeepLy\DeepLy::getLangCodes
-     */
-    public function testGetLangCodes(): void
-    {
-        $deepLy = $this->getInstance();
-
-        $langCodes = $deepLy->getLangCodes();
-
-        $this->assertNotNull($langCodes);
-        $this->assertGreaterThan(0, sizeof($langCodes));
-        $this->assertEquals('auto', current($langCodes)); // The auto lang code must be the first item in the array
-    }
-
-    /**
-     * @covers \Octfx\DeepLy\DeepLy::getLangCodes
-     * @covers \Octfx\DeepLy\DeepLy::supportsLangCode
-     */
-    public function testSupportsLangCode(): void
-    {
-        $deepLy = $this->getInstance();
-
-        $langCodes = $deepLy->getLangCodes(false);
-        $langCode = current($langCodes);
-
-        $supportsLang = $deepLy->supportsLangCode($langCode);
-
-        $this->assertEquals(true, $supportsLang);
-    }
 
     /**
      * @covers \Octfx\DeepLy\DeepLy::getLangName
