@@ -262,7 +262,7 @@ class DeepLy
     public function getSupportedLanguages(string $type = 'source'): SupportedLanguagesBag
     {
         $rawResponseData = $this->httpClient->callApi(
-            'languages ',
+            'languages',
             'GET',
             [
                 'auth_key' => $this->apiKey,
