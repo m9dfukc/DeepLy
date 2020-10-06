@@ -17,7 +17,7 @@ From then on you may run `composer update` to get the latest version of this lib
 It is possible to use this library without using Composer but then it is necessary to register an 
 [autoloader function](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-0.md#example-implementation).
 
-> This library requires PHP 7.1 or higher and the mbstring extension.
+> This library requires PHP 7.2 or higher, the mbstring, and json extension.
 
 If you do not have an API key, now is the time to get one. Vist [DeepL-com](https://deepl.com/) to request an API key.
 
@@ -63,10 +63,7 @@ try {
 Always wrap calls of the `translate` method in a try-catch-block, because they might throw an exception if the
 arguments are invalid or the API call fails. Instead of using hardcoded strings as language arguments 
 better use the language code constants of the `DeepLy` class. The class also offers methods such as
-`getLangCodes($withAuto = true)` and `supportsLangCode($langCode)`. 
-
-You may use the `proposeTranslations` method if you want to get alternative translations for a text. 
-This method cannot operate on more than one sentence at once. 
+`supportsSourceLangCode($langCode)` and `supportsTargetLangCode($langCode)`. 
 
 ## Translation formality
 The DeepL API allows to specify the formality of the translated text.  
@@ -101,7 +98,13 @@ language than no language at all.
 
 ## Supported Languages
 
-DeepL(y) supports these languages:
+All supported languages by DeepL can be requested by calling
+```php
+$deepLy->getSupportedLanguages('source'); // all supported source languages
+$deepLy->getSupportedLanguages('target'); // all supported target languages
+```
+
+DeepL(y) supports these source languages:
 
 | Code | Language      |
 |------|---------------|
@@ -109,17 +112,36 @@ DeepL(y) supports these languages:
 | DE   | German        |
 | EN   | English       |
 | FR   | French        |
-| ES   | Spanish       |
 | IT   | Italian       |
+| JA   | Japanese      |
+| ES   | Spanish       |
 | NL   | Dutch         |
 | PL   | Polish        |
 | PT   | Portuguese    |
 | RU   | Russian       |
+| ZH   | Chinese       |
+
+DeepL(y) supports these target languages:
+
+| Code  | Language               |
+|-------|------------------------|
+| DE    | German                 |
+| EN-GB | English (British)      |
+| EN-US | English (American)     |
+| EN    | DEPRECATED             |
+| FR    | French                 |
+| IT    | Italian                |
+| JA    | Japanese               |
+| ES    | Spanish                |
+| NL    | Dutch                  |
+| PL    | Polish                 |
+| PT    | DEPRECATED             |
+| PT-PT | Portuguese (all)       |
+| PT-BR | Portuguese (Brazilian) |
+| RU    | Russian                |
+| ZH    | Chinese                |
 
 > Note that auto detection only is possible for the source language. 
-
-DeepL says they will [add more languages](https://www.heise.de/newsticker/meldung/Maschinelles-Uebersetzen-Deutsches-Start-up-DeepL-will-230-Sprachkombinationen-unterstuetzen-3836533.html) 
-in the future, such as Chinese and Russian.
 
 ## Text Length Limit
 
@@ -136,16 +158,16 @@ Per default DeepLy uses a HTTP client based on Guzzle. If you want to use a diff
 
 ## Framework Integration
 
-DeepLy comes with support for Laravel 5.x and since it also supports 
+DeepLy comes with support for Laravel 5.x - 7.x and since it also supports 
 [package auto-discovery](https://medium.com/@taylorotwell/package-auto-discovery-in-laravel-5-5-ea9e3ab20518) 
-it will be auto-detected in Laravel 5.5. 
+it will be auto-detected in Laravel 5.5 - 7.x 
 
 In Laravel 5.0-5.4 you manually have to register the service provider
  `Octfx\DeepLy\Integrations\Laravel\DeepLyServiceProvider` in the "providers" array and the facade 
  `Octfx\DeepLy\Integrations\Laravel\DeepLyFacade` as an alias in the "aliases" array 
  in your `config/app.php` config file.
 
-DeepLy uses `config('services.deepl.auth_key')` to retrieve the API key so you have to set it in the `services.php` settings.
+DeepLy uses `config('services.deepl.auth_key')` to retrieve the API key, so you have to set it in the `services.php` settings.
 
 ```php
 return [

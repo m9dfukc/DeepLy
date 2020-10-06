@@ -23,7 +23,7 @@ class JsonProtocol implements ProtocolInterface
      *
      * @throws ProtocolException|InvalidArgumentException
      */
-    public function processResponseData($rawResponseData): stdClass
+    public function processResponseData(string $rawResponseData): stdClass
     {
         return json_decode($rawResponseData);
     }
