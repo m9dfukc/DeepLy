@@ -129,7 +129,7 @@ class DeepLy
     /**
      * Current version number.
      */
-    public const VERSION = '3.0.3';
+    public const VERSION = '3.1.0';
 
     /**
      * @var ProtocolInterface
