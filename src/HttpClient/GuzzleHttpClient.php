@@ -57,12 +57,8 @@ class GuzzleHttpClient implements HttpClientInterface
      *
      * @throws CallException
      */
-    public function callApi($url, string $method, array $payload = []): string
+    public function callApi(string $url, string $method, array $payload = []): string
     {
-        if (!is_string($url)) {
-            throw new InvalidArgumentException('$url has to be a string');
-        }
-
         try {
             if ('GET' === $method) {
                 $guzzleResponse = $this->guzzle->request(
