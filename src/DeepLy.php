@@ -188,9 +188,9 @@ class DeepLy
     /**
      * DeepLy object constructor.
      *
-     * @param string $apiKey The API key for the DeepL API
+     * @param string|null $apiKey The API key for the DeepL API
      */
-    public function __construct(string $apiKey)
+    public function __construct(?string $apiKey)
     {
         $this->apiKey = $apiKey;
 
