@@ -25,8 +25,10 @@ class GuzzleHttpClient implements HttpClientInterface
 
     /**
      * GuzzleHttpClient constructor.
+     * 
+     * @param string $url     The Endpoint base URI
      */
-    public function __construct()
+    public function __construct(string $base_uri)
     {
         if (!$this->isGuzzleAvailable()) {
             throw new LogicException(
@@ -40,7 +42,7 @@ class GuzzleHttpClient implements HttpClientInterface
 
         $this->guzzle = new Client(
             [
-                'base_uri' => DeepLy::API_BASE_URL,
+                'base_uri' => $base_uri,
                 'timeout' => 10.0,
             ]
         );

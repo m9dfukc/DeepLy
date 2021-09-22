@@ -116,10 +116,15 @@ class DeepLy
     public const MAX_TRANSLATION_TEXT_LEN = 30000;
 
     /**
-     * The base URL of the API endpoint.
+     * The base URL of the API "Pro" endpoint.
      */
-    public const API_BASE_URL = 'https://api.deepl.com/v2/';
+    public const API_BASE_URL_PRO = 'https://api.deepl.com/v2/';
 
+    /**
+     * The base URL of the API "Free" endpoint.
+     */
+    public const API_BASE_URL_FREE = 'https://api-free.deepl.com/v2/';
+    
     /**
      * Array with all versions of the DeepL API that are supported
      * by the current version of DeepLy.
@@ -129,7 +134,7 @@ class DeepLy
     /**
      * Current version number.
      */
-    public const VERSION = '3.1.2';
+    public const VERSION = '3.2.0';
 
     /**
      * @var ProtocolInterface
@@ -142,6 +147,13 @@ class DeepLy
      * @var string
      */
     protected $apiKey;
+
+    /**
+     * The API endpoint url.
+     *
+     * @var string
+     */
+    protected $apiBaseUri;
 
     /**
      * The HTTP client used for communication.
@@ -192,11 +204,11 @@ class DeepLy
      */
     public function __construct(?string $apiKey)
     {
+        $freeAccount = substr( $apiKey, -3 ) === ':fx';
+        $this->apiBaseUri = $freeAccount ? self::API_BASE_URL_FREE : self::API_BASE_URL_PRO;
         $this->apiKey = $apiKey;
-
         $this->protocol = new JsonProtocol();
-        // Create the default HTTP client. You may call setHttpClient() to set another HTTP client.
-        $this->httpClient = new GuzzleHttpClient();
+        $this->httpClient = new GuzzleHttpClient($this->apiBaseUri);
     }
 
     /**
